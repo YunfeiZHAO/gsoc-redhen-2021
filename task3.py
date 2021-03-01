@@ -1,11 +1,12 @@
+import random
+
 """Task3: Generate a list of 100'000 tuples (x,id), where x is a value between 0 and 1000 and id is a unique
 identifier. Return the id of the 500 elements with the smallest x. You may return more than 500 elements,
 if the 500th element has the same value as the 501st, 502nd, etc., however, you should not return fewer than 500
 elements. Make sure you do this efficiently. Hint: this can be done in O(n) """
 
-import random
-# For this question we consider values of x are integers.
 
+# For this question we consider values of x are integers.
 
 # tuples generator
 def random_tuples_gen(min, max, n):
