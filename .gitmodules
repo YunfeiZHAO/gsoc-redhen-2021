@@ -1,3 +1,0 @@
-[submodule "tools/ava_downloader"]
-	path = tools/ava_downloader
-	url = https://github.com/alainray/ava_downloader.git
