@@ -9,6 +9,8 @@ from tqdm import tqdm
 
 import video2frame
 
+from openpose import pyopenpose as op
+import keypoints
 
 def generate_folders(root):
     frame_path = os.path.join(root, 'frames')
@@ -148,6 +150,7 @@ def chalearn_json_annotation_generation(root='chalearn', type='train', jsonfile_
         json.dump(dataset, outfile)
     return
 
+
 def chalearn_frames_generation(root='chalearn', type='train', frames_root='frames'):
     """Generate frames from videos"""
     annotation_path = os.path.join(root, 'Annotations', type + '_annotations.json')
@@ -160,6 +163,26 @@ def chalearn_frames_generation(root='chalearn', type='train', frames_root='frame
         video_path = video['video_path']
         video2frame.simple_video2frame(video_path, frame_path)
 
+
+def generate_keypoints_dataset(root='chalearn', type='train', keypoints_root='keypoints'):
+    """Generate keypoints from frames"""
+    # OpenPose initialisqtion
+    params = {}
+    params['model_folder'] = '/opt/openpose/models'
+    # params['hand'] = True
+    opWrapper = op.WrapperPython()
+    opWrapper.configure(params)
+    opWrapper.start()
+    annotation_path = os.path.join(root, 'Annotations', type + '_annotations.json')
+    data = json.load(open(annotation_path))
+    videos = data['videos']
+    for video in tqdm(videos):
+        id = video['id']
+        keypoints_path = os.path.join(root, keypoints_root, type, id + '.json')
+        keypoints_data = keypoints.extract_keypoints_frames(video['frame_path'], video['imgWidth'], video['imgHeight'], opWrapper, keypoints_path, keypoints_path.split('.')[0])
+
+
+    
 # def main():
 #     root = '/home/yxz2569/chalearn'
 #     generate_folders(root)
@@ -177,5 +200,8 @@ root = '/home/yxz2569/chalearn'
 # chalearn_json_annotation_generation('/home/yxz2569/chalearn/', 'valid', 'Annotations')
 
 # Frames generation
-chalearn_frames_generation(root='/home/yxz2569/chalearn/', type='train', frames_root='frames')
-chalearn_frames_generation(root='/home/yxz2569/chalearn/', type='valid', frames_root='frames')
+# chalearn_frames_generation(root='/home/yxz2569/chalearn/', type='train', frames_root='frames')
+# chalearn_frames_generation(root='/home/yxz2569/chalearn/', type='valid', frames_root='frames')
+
+# Keypoints generation
+generate_keypoints_dataset(root='chalearn', type='train', keypoints_root='keypoints')
