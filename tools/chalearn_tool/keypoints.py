@@ -24,10 +24,17 @@ def extract_keypoints(image_path, opWrapper, save_path):
     # print("Right hand keypoints: \n" + str(datum.handKeypoints[1]))
 
     # Extract first 8 points on body
-    poseKeypoints = datum.poseKeypoints[0, 0:9, 0:2]
-    normalised_poseKeypoints = poseKeypoints/[width, height]
-    normalised_center_point_1 = normalised_poseKeypoints[1]
-    centered_normalised_poseKeypoints = normalised_poseKeypoints - normalised_center_point_1
+    if len(datum.poseKeypoints.shape) != 3:
+        poseKeypoints = np.zeros((1, 9, 2))
+        normalised_center_point_1 = poseKeypoints[0][1]
+        centered_normalised_poseKeypoints = poseKeypoints[0]
+        print(normalised_center_point_1)
+        print(centered_normalised_poseKeypoints)
+    else:
+        poseKeypoints = datum.poseKeypoints[0, 0:9, 0:2]
+        normalised_poseKeypoints = poseKeypoints/[width, height]
+        normalised_center_point_1 = normalised_poseKeypoints[1]
+        centered_normalised_poseKeypoints = normalised_poseKeypoints - normalised_center_point_1
     # display
     if save_path:
         cv2.imwrite(save_path, datum.cvOutputData)
@@ -83,9 +90,9 @@ def generate_keypoints_dataset(root='chalearn', type='train', keypoints_root='ke
     for video in tqdm(videos):
         id = video['id']
         keypoints_path = os.path.join(root, keypoints_root, type, id + '.json')
-        # import pdb;pdb.set_trace()
-        extract_keypoints_frames(video['frame_path'], video['imgWidth'], video['imgHeight'], opWrapper, keypoints_path)
-        # extract_keypoints_frames(video['frame_path'], video['imgWidth'], video['imgHeight'], opWrapper, keypoints_path, keypoints_path.split('.')[0])
+        if not os.path.isfile(keypoints_path):
+            print(video['frame_path'])
+            extract_keypoints_frames(video['frame_path'], video['imgWidth'], video['imgHeight'], opWrapper, keypoints_path)
         # extract_keypoints_frames('/home/yxz2569/chalearn/frames/train/003/00103/', 320.0, 240.0, opWrapper, '/home/yxz2569/chalearn/keypoints/train/003/00103.json')
 
 # OpenPose initialisqtion
