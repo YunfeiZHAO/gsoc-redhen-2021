@@ -40,24 +40,16 @@ class GestureDetector(nn.Module):
 
     def forward(self, samples: NestedTensor):
         """ The forward expects a NestedTensor, which consists of:
-<<<<<<< HEAD
-               - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
-               - samples.mask: a binary mask of shape [batch_size x H x W], containing 1 on padded pixels
-=======
                - samples.tensor: batched keypoints features, of shape [batch_size x nframes x nkeypoints]
                - samples.mask: a binary mask of shape [batch_size x nframes x nkeypoints], containing 1 on padded pixels
->>>>>>> 0f1ef90442bae26778ecad67cd6ac0094db6b58e
 
             It returns a dict with the following elements:
                - "pred_logits": the classification logits (including no-object) for all queries.
                                 Shape= [batch_size x num_queries x (num_classes + 1)]
-<<<<<<< HEAD
-               - "pred_boxes": The normalized boxes coordinates for all queries, represented as
-                               (center_x, center_y, height, width). These values are normalized in [0, 1],
-=======
+
                - "pred_segments": The normalized segments [start, end] for all queries, represented as.
                                These values are normalized in [0, 1],
->>>>>>> 0f1ef90442bae26778ecad67cd6ac0094db6b58e
+
                                relative to the size of each individual image (disregarding possible padding).
                                See PostProcess for information on how to retrieve the unnormalized bounding box.
                - "aux_outputs": Optional, only returned when auxilary losses are activated. It is a list of
