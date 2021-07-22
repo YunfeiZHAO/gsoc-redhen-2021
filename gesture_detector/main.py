@@ -145,7 +145,6 @@ def main(args):
 
     batch_sampler_train = torch.utils.data.BatchSampler(
         sampler_train, args.batch_size, drop_last=True)
-
     data_loader_train = DataLoader(dataset_train, batch_sampler=batch_sampler_train,
                                    collate_fn=utils.collate_fn, num_workers=args.num_workers)
     data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
@@ -199,15 +198,24 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
-    # args.batch_size = 2
-    # args.resume = './run/detr-r50-idd.pth'
     # args.dataset_file = 'coco'
     # args.coco_path = '../coco'
-    # args.output_dir = './run'
+
+    args.hidden_dim = 18 # 18 keypoints
+    args.dim_feedforward = 256 # feed forward intermediary in encoder
+    args.nheads = 2
+    args.num_queries = 10
+
     args.device = 'cuda'
+
     args.dataset_file = 'chalearn'
     args.chalearn_path = '/home/yxz2569/chalearn'
+
     args.batch_size = 2
+    args.num_workers = 1
+
+    # args.resume = './run/detr-r50-idd.pth'
+    args.output_dir = './run'
 
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
