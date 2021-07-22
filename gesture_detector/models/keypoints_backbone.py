@@ -20,5 +20,5 @@ class Joiner(nn.Sequential):
 def build_backbone(args):
     position_embedding = build_position_encoding(args)
     model = Joiner(position_embedding)
-    model.num_channels = 9
+    model.num_channels = 18
     return model
