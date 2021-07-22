@@ -117,8 +117,8 @@ class ChalearnAnnotation:
         return jsonDict
 
 
-def chalearn_json_annotation_generation(root='chalearn', type='train', jsonfile_root='Annotations'):
-    """Generate Annotations"""
+def chalearn_json_annotation_generation(root='chalearn', type='train', jsonfile_root='annotations'):
+    """Generate annotations"""
     annotation_path = os.path.join(root, jsonfile_root, type + '_annotations.json')
     txt_file_path = os.path.join(root, f'{type}.txt')
     os.makedirs(os.path.join(root, jsonfile_root), exist_ok=True)
@@ -151,7 +151,7 @@ def chalearn_json_annotation_generation(root='chalearn', type='train', jsonfile_
 
 def chalearn_frames_generation(root='chalearn', type='train', frames_root='frames'):
     """Generate frames from videos"""
-    annotation_path = os.path.join(root, 'Annotations', type + '_annotations.json')
+    annotation_path = os.path.join(root, 'annotations', type + '_annotations.json')
     data = json.load(open(annotation_path))
     videos = data['videos']
     for video in tqdm(videos):
@@ -179,8 +179,8 @@ root = '/home/yxz2569/chalearn'
 # CA.fromText(root, type, '110/05452 1,33:233 34,71:71')
 
 # Annotation generation
-# chalearn_json_annotation_generation('/home/yxz2569/chalearn/', 'train', 'Annotations')
-# chalearn_json_annotation_generation('/home/yxz2569/chalearn/', 'valid', 'Annotations')
+# chalearn_json_annotation_generation('/home/yxz2569/chalearn/', 'train', 'annotations')
+# chalearn_json_annotation_generation('/home/yxz2569/chalearn/', 'valid', 'annotations')
 
 # Frames generation
 # chalearn_frames_generation(root='/home/yxz2569/chalearn/', type='train', frames_root='frames')

@@ -2,6 +2,7 @@
 author: Yunfei
 """
 import os
+from pathlib import Path
 from collections import defaultdict
 import time
 import json
@@ -12,6 +13,7 @@ import cv2
 import numpy as np
 
 import torch
+
 
 # Chalearn dataset
 class ChalearnKeypointDataset:
@@ -117,9 +119,9 @@ class ChalearnKeypointDataset:
 
 
 # Chalearn dataset loader
-class ChalearnLoader():
+class ChalearnLoader:
     def __init__(self, root, ann_file='train_annotations.json'):
-        ann_file = os.path.join(root, 'Annotations', ann_file)
+        ann_file = os.path.join(root, 'annotations', ann_file)
         self.dataset = ChalearnKeypointDataset(ann_file)
         self.ids = list(sorted(self.dataset.videos.keys()))
         self.root = root
@@ -132,15 +134,17 @@ class ChalearnLoader():
     def _load_segments(self, id):
         return self.dataset.loadSegs(self.dataset.getSegIds(id))
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx, prepare=True):
         video_id = self.ids[idx]
         video = self._load_keypoint(video_id)
         video['centers'] = torch.tensor(video['centers'])
         video['keypoints'] = torch.tensor(video['keypoints'])
 
         segments = self._load_segments(video_id)
-        segments = {'video_id': video_id, 'segments': segments}
-        return video, segments
+        target = {'video_id': video_id, 'segments': segments}
+        if prepare:
+            video, target = self._prepare_for_detector(video, target)
+        return video, target
 
     def __len__(self):
         return len(self.ids)
@@ -155,8 +159,24 @@ class ChalearnLoader():
         lines = [head] + [" " * _repr_indent + line for line in body]
         return '\n'.join(lines)
 
-    def extra_repr(self) -> str:
+    @staticmethod
+    def extra_repr() -> str:
         return "load: video keypoints and segments"
+
+    @staticmethod
+    def _prepare_for_detector(video, segments):
+        video = video['keypoints']
+        segments = segments['segments']
+        target = {}
+        num_seg = len(segments)
+        segs = torch.zeros(num_seg, 2)
+        label = torch.zeros(num_seg)
+        for i, s in enumerate(segments):
+            segs[i] = torch.tensor(s['normalised_start_end'])
+            label[i] = torch.tensor(1, dtype=torch.float32)  # all label signify that there is a gesture
+        target['segments'] = segs
+        target['label'] = label
+        return video, target
 
 
 # tool functions
@@ -176,8 +196,18 @@ def draw_text(img, text, color):
     cv2.putText(img, text, (text_offset_x, text_offset_y), font, fontScale=font_scale, color=(0, 0, 0), thickness=1)
 
 
-root = '/home/yunfei/Desktop/home/yxz2569/chalearn'
-loader = ChalearnLoader(root, ann_file='valid_annotations.json')
+def build(video_set, args):
+    root = Path(args.chalearn_path)
+    assert root.exists(), f'provided chalearn path {root} does not exist'
+    PATHS = {
+        "train": "train_annotations.json",
+        "val": "valid_annotations.json",
+    }
+
+    ann_file = PATHS[video_set]
+    dataset = ChalearnLoader(root, ann_file=ann_file)
+    return dataset
+
 
 # if __name__ == '__main__':
 #     root = '/home/yxz2569/chalearn'

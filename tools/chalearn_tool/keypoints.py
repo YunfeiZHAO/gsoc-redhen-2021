@@ -7,7 +7,6 @@ import numpy as np
 import json
 
 
-
 from openpose import pyopenpose as op
 
 
@@ -39,6 +38,28 @@ def extract_keypoints(image_path, opWrapper, save_path):
     if save_path:
         cv2.imwrite(save_path, datum.cvOutputData)
     return normalised_center_point_1, centered_normalised_poseKeypoints.reshape(-1)
+
+
+def hand_keypoints_test(image_folder, save_path):
+    params = {}
+    params['model_folder'] = '/opt/openpose/models'
+    params['hand'] = True
+    opWrapper = op.WrapperPython()
+    opWrapper.configure(params)
+    opWrapper.start()
+
+    os.makedirs(save_path, exist_ok=True)
+    frames_path = glob.glob(os.path.join(image_folder + "/*.jpg"))
+    for i, frame in enumerate(frames_path):
+        imageToProcess = cv2.imread(frame)
+        datum = op.Datum()
+        datum.cvInputData = imageToProcess
+        opWrapper.emplaceAndPop([datum])
+        cv2.imwrite(os.path.join(save_path, str(i) + '.jpg'), datum.cvOutputData)
+        print("Body keypoints: \n" + str(datum.poseKeypoints))
+        print("Left hand keypoints: \n" + str(datum.handKeypoints[0]))
+        print("Right hand keypoints: \n" + str(datum.handKeypoints[1]))
+    
 
 
 def extract_keypoints_frames(image_folder, image_width, image_height, opWrapper, save_json_path, save_folder=False):
@@ -108,4 +129,6 @@ root = '/home/yxz2569/chalearn'
 # extract_keypoints_frames('/home/yxz2569/chalearn/frames/train/003/00103/', 320.0, 240.0, opWrapper, '/home/yxz2569/chalearn/keypoints/train/003/00103.json', '/home/yxz2569/chalearn/keypoints/train/003/00103/')
 # extract_keypoints_frames('/home/yxz2569/chalearn/frames/train/003/00103/', 320.0, 240.0, opWrapper, '/home/yxz2569/chalearn/keypoints/train/003/00103.json')
 # draw_normalised_keypoints_on_frame('/home/yxz2569/chalearn/frames/train/003/00103/', '/home/yxz2569/chalearn/keypoints/train/003/00103.json', 1, 'test1.jpg')
-generate_keypoints_dataset(root, type='train', keypoints_root='keypoints')
+# generate_keypoints_dataset(root, type='train', keypoints_root='keypoints')
+
+hand_keypoints_test(os.path.join(root, 'frames/train/009/00411/'), 'keypoint_test')
