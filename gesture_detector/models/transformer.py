@@ -45,19 +45,17 @@ class Transformer(nn.Module):
                 nn.init.xavier_uniform_(p)
 
     def forward(self, src, mask, query_embed, pos_embed):
-        breakpoint()
-        # flatten NxCxHxW to HWxNxC
-        bs, h, w = src.shape
-        src = src.flatten(2).permute(2, 0, 1)
-        pos_embed = pos_embed.flatten(2).permute(2, 0, 1)
+        bs, nframe, nkeypoints = src.shape
+        src = src.permute(1, 0, 2)  # [nframe, B, nkeypoints ]
+        pos_embed = pos_embed.permute(1, 0, 2)
         query_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)
-        mask = mask.flatten(1)
-
         tgt = torch.zeros_like(query_embed)
+        # [n_frames, n_batchs, n_keypoints] [130, 2, 18]
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
+        # [n_decoder_layers, n_target, n_batch, b_keypoints] [6, 10, 2, 18]
         hs = self.decoder(tgt, memory, memory_key_padding_mask=mask,
                           pos=pos_embed, query_pos=query_embed)
-        return hs.transpose(1, 2), memory.permute(1, 2, 0).view(bs, c, h, w)
+        return hs.transpose(1, 2), memory.transpose(0, 1)
 
 
 class TransformerEncoder(nn.Module):

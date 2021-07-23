@@ -33,7 +33,7 @@ class PositionEmbeddingSine(nn.Module):
         assert mask is not None
         # mask [batch, time, keypoint_dim]
         # not_mask [batch, time]
-        not_mask = ~mask[:, :, 0]
+        not_mask = ~mask
         # t_embed [batch, time]
         t_embed = not_mask.cumsum(1, dtype=torch.float32)  # on time dimension
         if self.normalize:
