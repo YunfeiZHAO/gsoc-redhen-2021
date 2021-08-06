@@ -170,12 +170,12 @@ class ChalearnLoader:
         target = {}
         num_seg = len(segments)
         segs = torch.zeros(num_seg, 2)
-        label = torch.zeros(num_seg)
+        label = torch.zeros(num_seg, dtype=torch.long)
         for i, s in enumerate(segments):
             segs[i] = torch.tensor(s['normalised_start_end'])
-            label[i] = torch.tensor(1, dtype=torch.float32)  # all label signify that there is a gesture
+            label[i] = torch.tensor(1, dtype=torch.long)  # all label signify that there is a gesture
         target['segments'] = segs
-        target['label'] = label
+        target['labels'] = label
         return video, target
 
 
