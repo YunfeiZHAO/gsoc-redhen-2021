@@ -128,7 +128,7 @@ class ChalearnLoader:
 
     def _load_keypoint(self, id: str):
         keypoint_path = self.dataset.loadVideos(id)[0]['keypoint_path']
-        keypoints = json.load(open(keypoint_path))
+        keypoints = json.load(open(os.path.join(self.root, keypoint_path)))
         return keypoints
 
     def _load_segments(self, id):
@@ -173,7 +173,7 @@ class ChalearnLoader:
         label = torch.zeros(num_seg, dtype=torch.long)
         for i, s in enumerate(segments):
             segs[i] = torch.tensor(s['normalised_start_end'])
-            label[i] = torch.tensor(1, dtype=torch.long)  # all label signify that there is a gesture
+            label[i] = torch.tensor(0, dtype=torch.long)  # all label signify that there is a gesture
         target['segments'] = segs
         target['labels'] = label
         return video, target
@@ -215,3 +215,7 @@ def build(video_set, args):
 #     chalearn.generate_label_on_frames_one_video('001/00001', 'test')
 #     loader = ChalearnLoader(root, ann_file='valid_annotations.json')
 #
+
+root = '/home/yxz2569/chalearn'
+loader = ChalearnLoader(root, ann_file='train_annotations.json')
+
