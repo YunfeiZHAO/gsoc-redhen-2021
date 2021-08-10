@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, DistributedSampler
 
 import util.misc as utils
 from datasets import build_dataset
-from engine import train_one_epoch
+from engine import train_one_epoch, evaluate
 from models import build_model
 
 
@@ -167,30 +167,30 @@ def main(args):
 
     print("Start training")
     start_time = time.time()
-    for epoch in range(args.start_epoch, args.epochs):
-        if args.distributed:
-            sampler_train.set_epoch(epoch)
-        train_stats = train_one_epoch(
-            model, criterion, data_loader_train, optimizer, device, epoch,
-            args.clip_max_norm)
-        lr_scheduler.step()
-        if args.output_dir:
-            checkpoint_paths = [output_dir / 'checkpoint.pth']
-            # extra checkpoint before LR drop and every 100 epochs
-            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 50 == 0:
-                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
-            for checkpoint_path in checkpoint_paths:
-                utils.save_on_master({
-                    'model': model_without_ddp.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'lr_scheduler': lr_scheduler.state_dict(),
-                    'epoch': epoch,
-                    'args': args,
-                }, checkpoint_path)
-        # if (epoch + 1) % 100 == 0:
-        #     test_stats, coco_evaluator = evaluate(
-        #         model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
-        #     )
+    # for epoch in range(args.start_epoch, args.epochs):
+    #     if args.distributed:
+    #         sampler_train.set_epoch(epoch)
+    #     train_stats = train_one_epoch(
+    #         model, criterion, data_loader_train, optimizer, device, epoch,
+    #         args.clip_max_norm)
+    #     lr_scheduler.step()
+    #     if args.output_dmodelir:
+    #         checkpoint_paths = [output_dir / 'checkpoint.pth']
+    #         # extra checkpoint before LR drop and every 100 epochs
+    #         if (epoch + 1) %loss_dict_reduced args.lr_drop == 0 or (epoch + 1) % 50 == 0:
+    #             checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+    #         for checkpoint_path in checkpoint_paths:
+    #             utils.save_on_master({
+    #                 'model': model_without_ddp.state_dict(),
+    #                 'optimizer': optimizer.state_dict(),
+    #                 'lr_scheduler': lr_scheduler.state_dict(),
+    #                 'epoch': epoch,
+    #                 'args': args,
+    #             }, checkpoint_path)
+    #     if (epoch + 1) % 100 == 0:
+    test_stats = evaluate(
+        model, criterion, postprocessors, data_loader_train, device, args.output_dir
+    )
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -202,8 +202,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.epochs = 500
 
-    args.hidden_dim = 18 # 18 keypoints
-    args.dim_feedforward = 256 # feed forward intermediary in encoder
+    args.hidden_dim = 18  # 18 keypoints
+    args.dim_feedforward = 256  # feed forward intermediary in encoder
     args.nheads = 2
     args.num_queries = 10
 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     args.batch_size = 16
     args.num_workers = 4
 
-    # args.resume = './run/detr-r50-idd.pth'
+    args.resume = './run/checkpoint0499.pth'
     args.output_dir = './run'
     args.no_aux_loss = True
 

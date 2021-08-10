@@ -165,9 +165,11 @@ class ChalearnLoader:
 
     @staticmethod
     def _prepare_for_detector(video, segments):
-        video = video['keypoints']
-        segments = segments['segments']
         target = {}
+        video = video['keypoints']
+        target['video_id'] = segments['video_id']
+        target['length'] = torch.tensor([len(video)])
+        segments = segments['segments']
         num_seg = len(segments)
         segs = torch.zeros(num_seg, 2)
         label = torch.zeros(num_seg, dtype=torch.long)
@@ -216,6 +218,6 @@ def build(video_set, args):
 #     loader = ChalearnLoader(root, ann_file='valid_annotations.json')
 #
 
-root = '/home/yxz2569/chalearn'
-loader = ChalearnLoader(root, ann_file='train_annotations.json')
+# root = '/home/yxz2569/chalearn'
+# loader = ChalearnLoader(root, ann_file='train_annotations.json')
 

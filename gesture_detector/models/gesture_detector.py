@@ -25,7 +25,7 @@ class GestureDetector(nn.Module):
             num_classes: number of gesture classes (We have 1 here,
                          indice 0 means there is a gesture and indice 1 to present the background)
             num_queries: number of object queries, ie detection slot. This is the maximal number of segments that this
-            model can detect in a single image. For COCO, we recommend 100 queries.
+            model can detect in a single image. For COCO, we recommeEmbeddingnd 100 queries.
             aux_loss: True if auxiliary decoding losses (loss at each decoder layer) are to be used.
         """
         super().__init__()
@@ -34,7 +34,7 @@ class GestureDetector(nn.Module):
         hidden_dim = transformer.d_model
         self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
         self.segment_embed = MLP(hidden_dim, hidden_dim, 2, 3)
-        self.query_embed = nn.Embedding(num_queries, hidden_dim)
+        self.query_embed = nn.Embedding(num_queries, hidden_dim) # [10, 18]
         self.input_proj = nn.Linear(backbone.num_channels, hidden_dim)
         self.backbone = backbone
         self.aux_loss = aux_loss
@@ -241,12 +241,23 @@ class PostProcess(nn.Module):
         """ Perform the computation
         Parameters:
             outputs: raw outputs of the model
-            target_sizes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
-                    loss_boxes      For evaluation, this must be the original image size (before any data augmentation)
-                          For visualization, this should be the image size after data augment, but before padding
+            target_sizes: tensor of dimension [batch_size x 1] containing the length of each videos of the batch
+                          For evaluation, this must be the original videos frames number (before any data augmentation)
+                          For visualization, this should be the video length after data augment, but before padding
         """
-
-    pass
+        out_logits, out_segment = outputs['pred_logits'], outputs['pred_segments']
+        assert len(out_logits) == len(target_sizes)  # they should have the same batch size
+        assert target_sizes.shape[1] == 1  # contain only the video length
+        prob = F.softmax(out_logits, -1)
+        scores, labels = prob[..., :-1].max(-1)
+        # convert [start, length] to [start, end]
+        segments = segment_ops.segment_SL_to_SE(out_segment)
+        # from relative [0, 1] to absolute [0, video_length] coordinates
+        scale_fct = torch.stack([target_sizes, target_sizes], dim=2)
+        segments = segments * scale_fct
+        segments = segments.type(torch.int)
+        results = [{'scores': s, 'labels': l, 'segments': seg} for s, l, seg in zip(scores, labels, segments)]
+        return results
 
 
 def build(args):
