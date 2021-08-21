@@ -99,8 +99,8 @@ def main():
     extract_keypoints_frames(video_path=os.path.join(root, 'ellen_show/video/2014-11-18_0000_US_KNBC_The_Ellen_DeGeneres_Show_950-1240.mp4'),
                              image_folder=os.path.join(root, 'ellen_show/frames'),
                              opWrapper=opWrapper,
-                             save_json_path=os.path.join(root, 'ellen_show/keypoints'),
-                             save_keypoint_image_folder=os.path.join(root, 'ellen_show/keypoints/frames/ellen.json'),
+                             save_json_path=os.path.join(root, 'ellen_show/keypoints/ellen.json'),
+                             save_keypoint_image_folder=os.path.join(root, 'ellen_show/keypoints/frames'),
                              generate_frames=False
                              )
 
