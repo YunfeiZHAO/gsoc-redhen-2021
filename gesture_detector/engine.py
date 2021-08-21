@@ -91,9 +91,8 @@ def evaluate(model, criterion, postprocessors, data_loader, device, output_dir):
         orig_target_sizes = torch.stack([t["length"] for t in targets], dim=0)
 
         results = postprocessors['bbox'](outputs, orig_target_sizes)
+        res = {target['video_id']: output for target, output in zip(targets, results)}
         breakpoint()
-        res = {target['video_id'].item(): output for target, output in zip(targets, results)}
-
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
