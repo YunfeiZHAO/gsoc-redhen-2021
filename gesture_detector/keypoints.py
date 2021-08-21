@@ -63,7 +63,10 @@ def extract_keypoints_frames(video_path, image_folder, opWrapper, save_json_path
     centers = np.zeros((nframe, 2))
     keypoints = np.zeros((nframe, 18))
     for i, image_path in enumerate(frames_path):
-        save_keypoint_image_path = os.path.join(save_keypoint_image_folder, str(i + 1))
+        if save_keypoint_image_folder is not False:
+            save_keypoint_image_path = os.path.join(save_keypoint_image_folder, str(i + 1) + '.jpg')
+        else:
+            save_keypoint_image_path = False
         normalised_center_point_1, centered_normalised_poseKeypoints = extract_keypoints(image_path, opWrapper, save_keypoint_image_path)
         centers[i] = normalised_center_point_1
         keypoints[i] = centered_normalised_poseKeypoints
