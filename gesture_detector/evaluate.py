@@ -1,6 +1,7 @@
 import argparse
 import time
 from pathlib import Path
+import random
 
 import numpy as np
 import torch
@@ -84,3 +85,59 @@ def get_args_parser():
                         help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
     return parser
+
+
+def main(args):
+    print("git:\n  {}\n".format(utils.get_sha()))
+
+    device = torch.device(args.device)
+
+    # fix the seed for reproducibility
+    seed = args.seed + utils.get_rank()
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+    # /model/detr.py build
+    model, criterion, postprocessors = build_model(args)
+    model.to(device)
+
+    model_without_ddp = model  # ddp: DistributedDataParallel
+
+    param_dicts = [
+        {"params": [p for n, p in model_without_ddp.named_parameters() if "backbone" not in n and p.requires_grad]},
+        {
+            "params": [p for n, p in model_without_ddp.named_parameters() if "backbone" in n and p.requires_grad],
+            "lr": args.lr_backbone,
+        },
+    ]
+
+
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
+    args = parser.parse_args()
+    args.epochs = 500
+
+    args.hidden_dim = 18  # 18 keypoints
+    args.dim_feedforward = 256  # feed forward intermediary in encoder
+    args.nheads = 2
+    args.num_queries = 10
+
+    args.device = 'cuda'
+
+    args.dataset_file = 'chalearn'
+    args.chalearn_path = '/home/yxz2569/chalearn'
+
+    args.batch_size = 16
+    args.num_workers = 4
+
+    args.resume = './run/checkpoint0499.pth'
+    args.output_dir = './run'
+    args.no_aux_loss = True
+
+    if args.output_dir:
+        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    main(args)

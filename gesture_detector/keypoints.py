@@ -41,7 +41,7 @@ def extract_keypoints(image_path, opWrapper, save_path):
     return normalised_center_point_1, centered_normalised_poseKeypoints.reshape(-1)
 
 
-def extract_keypoints_frames(video_path, image_folder, opWrapper, save_json_path, save_keypoint_image_folder=False):
+def extract_keypoints_frames(video_path, image_folder, opWrapper, save_json_path, save_keypoint_image_folder=False, generate_frames=False):
     # get video properties
     frame_count, fps, image_width, image_height = video.get_video_property(video_path)
 
@@ -54,8 +54,9 @@ def extract_keypoints_frames(video_path, image_folder, opWrapper, save_json_path
     os.makedirs(save_keypoint_image_folder, exist_ok=True)
 
     # genenerate video frames
-    video.simple_video2frame(video_path, original_image_folder)
-    video.select_frames(original_image_folder, selected_image_folder, 1883, 2280)
+    if generate_frames:
+        video.simple_video2frame(video_path, original_image_folder)
+        video.select_frames(original_image_folder, selected_image_folder, 1883, 2280)
 
     # start keypoints processing
     frames_path = glob.glob(os.path.join(selected_image_folder + "/*.jpg"))
@@ -99,7 +100,8 @@ def main():
                              image_folder=os.path.join(root, 'ellen_show/frames'),
                              opWrapper=opWrapper,
                              save_json_path=os.path.join(root, 'ellen_show/keypoints'),
-                             save_keypoint_image_folder=os.path.join(root, 'ellen_show/keypoints/frames')
+                             save_keypoint_image_folder=os.path.join(root, 'ellen_show/keypoints/frames/ellen.json'),
+                             generate_frames=False
                              )
 
 
