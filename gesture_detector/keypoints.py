@@ -47,7 +47,7 @@ def extract_keypoints_frames(video_path, image_folder, opWrapper, save_json_path
 
     # create folders
     original_image_folder = os.path.join(image_folder, 'origin')
-    selected_image_folder = os.path.join(image_folder, 'selecte')
+    selected_image_folder = os.path.join(image_folder, 'selected')
     os.makedirs(original_image_folder, exist_ok=True)
     os.makedirs(selected_image_folder, exist_ok=True)
     os.makedirs(save_json_path, exist_ok=True)
@@ -79,17 +79,18 @@ def extract_keypoints_frames(video_path, image_folder, opWrapper, save_json_path
     return keypoints_data
 
 
+# OpenPose initialisation
+params = {}
+params['model_folder'] = '/opt/openpose/models'
+# params['hand'] = True
+opWrapper = op.WrapperPython()
+opWrapper.configure(params)
+opWrapper.start()
+
+root = '/home/yxz2569/'
+
+
 def main():
-    # OpenPose initialisation
-    params = {}
-    params['model_folder'] = '/opt/openpose/models'
-    # params['hand'] = True
-    opWrapper = op.WrapperPython()
-    opWrapper.configure(params)
-    opWrapper.start()
-
-    root = '/home/yxz2569/'
-
     extract_keypoints_frames(video_path=os.path.join(root, 'ellen_show/video/2014-11-18_0000_US_KNBC_The_Ellen_DeGeneres_Show_950-1240.mp4'),
                              image_folder=os.path.join(root, 'ellen_show/frames'),
                              opWrapper=opWrapper,
@@ -99,4 +100,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    pass
