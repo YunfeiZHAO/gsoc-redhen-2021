@@ -2,6 +2,8 @@ import argparse
 import time
 from pathlib import Path
 import random
+import json
+import os
 
 import numpy as np
 import torch
@@ -9,6 +11,8 @@ import torch
 import util.misc as utils
 from models import build_model
 
+import cv2
+import video
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Set transformer detector', add_help=False)
@@ -87,6 +91,17 @@ def get_args_parser():
     return parser
 
 
+def plot_result_on_frames(detections, frames_path, output_path):
+    for i, detection in enumerate(detections):
+        im = cv2.imread(os.path.join(frames_path, str(i + 1) + '.jpg'))
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        if detection:
+            cv2.putText(im, 'Gesture detected', (50, 50), font, 1, (127,255,0), 2, cv2.LINE_AA)
+        else:
+            cv2.putText(im, 'No Gesture detected', (50, 50), font, 1, (0, 0, 0), 2, cv2.LINE_AA)
+        cv2.imwrite(os.path.join(output_path, str(i + 1) + '.jpg'), im)
+
+
 def main(args):
     print("git:\n  {}\n".format(utils.get_sha()))
 
@@ -101,17 +116,41 @@ def main(args):
     # /model/detr.py build
     model, criterion, postprocessors = build_model(args)
     model.to(device)
+    postprocessors = postprocessors['segments']
+    # postprocessors.to(device)
 
-    model_without_ddp = model  # ddp: DistributedDataParallel
+    checkpoint = torch.load(args.resume, map_location='cpu')
+    model.load_state_dict(checkpoint['model'])
 
-    param_dicts = [
-        {"params": [p for n, p in model_without_ddp.named_parameters() if "backbone" not in n and p.requires_grad]},
-        {
-            "params": [p for n, p in model_without_ddp.named_parameters() if "backbone" in n and p.requires_grad],
-            "lr": args.lr_backbone,
-        },
-    ]
+    # load keypoints of a video
+    root = '/home/yxz2569'
+    keypoint_path = 'ellen_show/keypoints/ellen.json'
+    video_keypoints = json.load(open(os.path.join(root, keypoint_path)))
+    sample = torch.tensor(video_keypoints['keypoints'])
+    samples = utils.nested_tensor_from_tensor_list([sample])
+    samples = samples.to(device)
 
+    # target sizes
+    target_sizes = samples.tensors.size()[1]
+    detections = torch.zeros(target_sizes, dtype=torch.bool)
+    target_sizes = torch.tensor([[target_sizes]]).to(device)
+
+    # prediction
+    outputs = model(samples)
+
+    # postprocessing
+    results = postprocessors(outputs, target_sizes)
+    scores = results[0]['scores']
+    segments = results[0]['segments']
+    threshold = 0.9
+    predictions = segments[scores > threshold]
+
+    # generate results on image
+    for prediction in predictions:
+        detections[prediction[0] : prediction[1]] = True
+
+    plot_result_on_frames(detections, os.path.join(root, 'ellen_show/keypoints/frames'), os.path.join(root, 'ellen_show/keypoints/output'))
+    video.simple_frame2video(os.path.join(root, 'ellen_show/keypoints/output'), os.path.join(root, 'ellen_show/keypoints/output/result.avi'))
 
 
 

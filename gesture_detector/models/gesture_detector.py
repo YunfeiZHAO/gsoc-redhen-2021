@@ -251,7 +251,8 @@ class PostProcess(nn.Module):
         prob = F.softmax(out_logits, -1)
         scores, labels = prob[..., :-1].max(-1)
         # convert [start, length] to [start, end]
-        segments = segment_ops.segment_SL_to_SE(out_segment)
+        # segments = segment_ops.segment_SL_to_SE(out_segment)
+        segments = out_segment
         # from relative [0, 1] to absolute [0, video_length] coordinates
         scale_fct = torch.stack([target_sizes, target_sizes], dim=2)
         segments = segments * scale_fct
@@ -294,5 +295,5 @@ def build(args):
     criterion = SetCriterion(num_classes, matcher=matcher, weight_dict=weight_dict,
                              eos_coef=args.eos_coef, losses=losses)
     criterion.to(device)
-    postprocessors = {'bbox': PostProcess()}
+    postprocessors = {'segments': PostProcess()}
     return model, criterion, postprocessors
